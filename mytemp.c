@@ -18,78 +18,103 @@ typedef struct node_t node;
 typedef node* pnode; 
 
 struct node_t {
-	char *word;
-	struct node_t *next_node; 
+    char *word;
+    struct node_t *next_node; 
 };
+
+void print_node(char *txt, pnode node_pointer)
+{
+    printf("%s : ", txt);
+    pnode head = node_pointer;
+    while (head) 
+    {
+        printf("%s->", head->word);
+        head = head->next_node;
+    }
+    printf("\n");
+}
+
 
 //typedef struct node_t *pnode;
 pnode create_node(char *new_word) {
-	if( new_word == NULL ) {
-		return NULL;
-	}
-	pnode new_node = (pnode)malloc(sizeof(node));
-	if (new_node == NULL){
-		return NULL;
-	}
-	new_node->word = new_word;
-	new_node->next_node = NULL;
-	
-	return new_node;
+    if( new_word == NULL ) {
+        return NULL;
+    }
+    pnode new_node = (pnode)malloc(sizeof(node));
+    if (new_node == NULL){
+        return NULL;
+    }
+    new_node->word = new_word;
+    new_node->next_node = NULL;
+    
+    return new_node;
 }
 
 
 pnode create_list(char **text , int word_num ){
-	if (text == NULL){ // not sure if *text or text
-		return NULL;
-	}
-	pnode head = NULL;
-	pnode curr_node = NULL;
-	for ( int i=0; i < word_num; i++){
-		if( i==0){
-			head = create_node(text[i]);
-			if ( head == NULL){
-				return NULL;
-			}
-			curr_node = head;
-		}
-		else {
-			curr_node->next_node = create_node(text[i]);
-			if ( curr_node->next_node == NULL){
-				return NULL;//reach here in case malloc didn't work should i free the memory and exit the program ?
-			}
-			curr_node = curr_node->next_node; 
-		}
-	}
-    return head;		
+    if (text == NULL){ // not sure if *text or text
+        return NULL;
+    }
+    pnode head = NULL;
+    pnode curr_node = NULL;
+    for ( int i=0; i < word_num; i++){
+        if( i==0){
+            head = create_node(text[i]);
+            if ( head == NULL){
+                return NULL;
+            }
+            curr_node = head;
+        }
+        else {
+            curr_node->next_node = create_node(text[i]);
+            if ( curr_node->next_node == NULL){
+                return NULL;//reach here in case malloc didn't work should i free the memory and exit the program ?
+            }
+            curr_node = curr_node->next_node; 
+        }
+    }
+    return head;        
 }
 
+/*
 // the function returns true if the word exists in the list, and then it frees the words node. otherwise it returns false.
 bool does_word_exist(char *check_word, pnode list ){
     if (check_word == NULL || list == NULL){
         return false;
     }
+    printf("\n\nn does_word_exist\n");
     pnode curr_node = list;
     pnode prev_node = list;
     bool first_iteration = true;
     while (curr_node != NULL){
+
+        print_node("while begin prev_node", prev_node);
+        print_node("while begin curr_node", curr_node);
+
         if(strcmp(check_word, curr_node->word)==0){
+            printf("in the strcmp\n");
             //if there is a match with the first word
             if (first_iteration){
+                tmp = curr_node;
                 list = curr_node->next_node;
-                free(curr_node);
+                print_node("curr_node", curr_node);
+                free(tmp);
                 return true;
 
             }
             //if there is a match with a regular node 
             else if (curr_node->next_node != NULL){
+                tmp = curr_node;
                 prev_node->next_node = curr_node->next_node;
-                free(curr_node);
+                print_node("curr_node middle", curr_node);
+                free(tmp);
                 return true;
             }
             // if there  is a match with the last word 
             else {
+                tmp = curr_node;
                 prev_node->next_node = NULL;
-                free(curr_node);
+                free(tmp);
                 return true;
             }
         }
@@ -99,14 +124,62 @@ bool does_word_exist(char *check_word, pnode list ){
                 first_iteration = false;
             }
             else{
+                print_node("last prev_node", prev_node);
                 prev_node = prev_node->next_node;
                 curr_node = curr_node->next_node;
             }
         }
     }
     return false;
+}*/
+
+
+bool does_word_exist(char *check_word, node **list)
+{
+    if (check_word == NULL || list == NULL){
+        return false;
+    }
+    
+    node *curr_node = *list;
+    node *temp_node;
+
+    if(strcmp(check_word, curr_node->word) ==0)
+    {
+        //if there is a match with the first word
+        temp_node = curr_node;
+        *list = curr_node->next_node;
+        free(temp_node);
+        return true;
+    }
+
+    while (curr_node->next_node)
+    {
+        if(strcmp(check_word, curr_node->next_node->word)==0)
+        {
+            temp_node = curr_node->next_node;
+            curr_node->next_node = curr_node->next_node->next_node;
+            free(temp_node);
+            return true;
+        }
+        curr_node = curr_node->next_node;  
+    }   
+
+
+    if(strcmp(check_word, curr_node->word) ==0)
+    {
+        //if there is a match with the first word
+        temp_node = curr_node;
+        *list = curr_node->next_node;
+        free(temp_node);
+        return true;
+    }
+    return false;
 }
-	
+
+
+
+
+    
 void free_list(pnode list){
     if (list == NULL){
         return;
@@ -135,14 +208,23 @@ void checkMagazine(int magazine_count, char** magazine, int note_count, char** n
         return;
     }
     pnode curr_node = note_list;
+
+    print_node("magazine_list", magazine_list);
+    print_node("note_list", note_list);
+    printf("\n\n");
     while(curr_node != NULL){
-        if( does_word_exist(curr_node->word, magazine_list) == false){
+        print_node("entering curr_node",curr_node);
+        print_node("magazine_list", magazine_list);
+
+        if( does_word_exist(curr_node->word, &magazine_list) == false ){
             printf("No");
             free_list(magazine_list);
             free_list(note_list);
             return;
         }
+        printf("\n");
         curr_node = curr_node->next_node;
+
     }
     printf("Yes");
     free_list(magazine_list);
